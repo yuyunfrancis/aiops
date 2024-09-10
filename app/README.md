@@ -11,12 +11,17 @@
 
 ![Updating the application_1](screenshots/updating_1.png)
 
-![Updating the application_1](screenshots/updating_1.png)
+![Updating the application_1](screenshots/updating_2.png)
 
 
 ## 3. Sharing Our Application Screenshots
 
-[Insert screenshot of sharing your application here]
+![Sharing our application: Repository push](screenshots/push.png)
+
+![Sharing our application: Repository overview](screenshots/image.png)
+
+![Sharing our application: Play Ground](screenshots/playground.png)
+
 
 ## 4. Persisting Our DB Screenshots
 

@@ -9,7 +9,10 @@
 
 ## 2. Updating Our Application Screenshots
 
-[Insert screenshot of updating your application here]
+![Updating the application_1](screenshots/updating_1.png)
+
+![Updating the application_1](screenshots/updating_1.png)
+
 
 ## 3. Sharing Our Application Screenshots
 

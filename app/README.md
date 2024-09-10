@@ -25,7 +25,11 @@
 
 ## 4. Persisting Our DB Screenshots
 
-[Insert screenshot of persisting your database here]
+![Persistence DB: Create Volume](screenshots/persist_setup.png)
+
+![Persistence DB: Added Items](screenshots/persist1.png)
+
+![Persistence DB: Volume inspect](screenshots/persist.png)
 
 ## 5. Using Bind Mounts Screenshots
 
@@ -33,12 +37,14 @@
 
 ## 6. Using Docker Compose Screenshots
 
-[Insert screenshot of using Docker Compose here]
+![Docker Compose: Setup](screenshots/docker_compose_setup.png)
+
+![In action: Added Items](screenshots/docker_compose_1.png)
 
 ## 7. Custom Network Screenshots
 
-[Insert screenshot of custom network configuration here]
+![Network Setup: Create Volume](screenshots/network.png)
 
-## 8. Remote in to Running Container Screenshots
+![In action: Added Items](screenshots/network_1.png)
 
-[Insert screenshot of remoting into a running container here]
+<!-- ![Persistence DB: Volume inspect](screenshots/persist.png) -->

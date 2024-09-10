@@ -4,7 +4,7 @@
 
 ![Building our application](screenshots/buildingapplication.png)
 
-![Application preview after build](screenshots/buildingapplication.png)
+![Application preview after build](screenshots/ourapplication.png)
 
 
 ## 2. Updating Our Application Screenshots

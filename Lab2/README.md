@@ -53,3 +53,11 @@
 ![Building our application](screenshots/G3.png)
 
 ![Building our application](screenshots/G4.png)
+
+![Building our application](screenshots/G5.png)
+
+![Building our application](screenshots/G6.png)
+
+![Building our application](screenshots/G7.png)
+
+![Building our application](screenshots/G8.png)

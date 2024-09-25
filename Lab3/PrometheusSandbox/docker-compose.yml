@@ -1,4 +1,4 @@
-# version: "3.6"
+version: "3.6"
 services:
   app_one:
     container_name: "app_one"
@@ -19,16 +19,19 @@ services:
     build: "./containers/prometheus"
     ports:
       - "9090:9090"
+
   grafana:
     container_name: "grafana"
     build: "./containers/grafana"
     ports:
       - "3000:3000"
+
   node_exporter:
     container_name: "prometheus_node_exporter"
     image: "quay.io/prometheus/node-exporter"
     ports:
       - "9100:9100"
+
   push_gateway:
     container_name: "prometheus_push_gateway"
     image: "prom/pushgateway"
@@ -43,6 +46,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: example
+
   postgres_exporter:
     container_name: "postgres_exporter"
     image: "wrouesnel/postgres_exporter"
@@ -53,11 +57,10 @@ services:
     depends_on:
       - postgres
 
-  model_evaluation:
+  model:
     container_name: "model"
     build: "./containers/model"
     depends_on:
       - prometheus
     environment:
-      PROMETHEUS_URL: "http://prometheus:9090"
-      PROMETHEUS_PUSH_GATEWAY_URL: "http://push_gateway:9091"
+      - PROMETHEUS_URL=http://prometheus:9090

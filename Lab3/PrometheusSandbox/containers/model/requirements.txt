@@ -1,1 +1,7 @@
-numpy
+prometheus_client
+prometheus_api_client
+pandas
+prophet
+matplotlib
+numpy==1.26.0
+plotly

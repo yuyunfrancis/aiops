@@ -5,15 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3833f3fe-ca6f-48be-828e-87134363be8c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../.idea/Lab3.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/containers/model/model_evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/containers/model/model_evaluation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../writeup/Special Topics AIOps F24 Lab 3 Detecting anomalies with Prophet.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/containers/model/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/containers/model/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,8 +106,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.22855.92" />
-        <option value="bundled-python-sdk-b068d85d1acf-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.22855.92" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23339.19" />
+        <option value="bundled-python-sdk-0029f7779945-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23339.19" />
       </set>
     </attachedChunks>
   </component>
@@ -129,7 +122,10 @@
       <workItem from="1727240488873" duration="137000" />
       <workItem from="1727240644234" duration="11812000" />
       <workItem from="1727252476964" duration="117000" />
-      <workItem from="1727296823185" duration="8072000" />
+      <workItem from="1727296823185" duration="8347000" />
+      <workItem from="1727311846275" duration="66000" />
+      <workItem from="1727311946025" duration="10000" />
+      <workItem from="1727376124673" duration="4843000" />
     </task>
     <servers />
   </component>

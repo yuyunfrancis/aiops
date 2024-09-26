@@ -16,7 +16,7 @@ Letting a Prophet model retrain itself all the time in production can help it ad
 
 ## Description
 
-This is a Docker setup for trying out Prometheus and Grafana with Facebook Prophet for 3forecasting and predictions
+This is a Docker setup for trying out Prometheus and Grafana with Facebook Prophet for forecasting and predictions
 
 ## How to get started
 

@@ -77,7 +77,3 @@
   - **Description**: We used Grafana to visualize metrics from Prometheus. By accessing specific metrics like `request_result_total`, we were able to observe the application’s request rate and other key performance indicators.
 
 These steps provided a structured approach to setting up, scaling, and monitoring the BookInfo application, ensuring that it could handle load effectively and that we could observe its behavior in real-time.
-
-```
-
-```

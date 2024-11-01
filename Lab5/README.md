@@ -102,4 +102,3 @@ This guide covers:
 - Monitoring and visualizing metrics in Grafana and Kiali
 
 For screenshots of each task, see the respective folders: `task1`, `task2`, and `task3`.
-I'll help format the markdown with proper spacing, headers, and consistent styling.

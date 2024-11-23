@@ -1,159 +1,154 @@
-import os
-import time
-import datetime
-import logging
-from prometheus_api_client import PrometheusConnect
+import json
+import requests
 import pandas as pd
 from prophet import Prophet
-from prometheus_client import Gauge, start_http_server, REGISTRY
-from prometheus_client.exposition import ThreadingWSGIServer
+from prometheus_client import Gauge, start_http_server
+import time
+from datetime import datetime
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
+from tabulate import tabulate
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-def prometheus_connection(url):
-    """Connect to Prometheus server"""
-    return PrometheusConnect(url, disable_ssl=True)
-
-def fetch_training_data(prom, metric_name):
-    """Fetch training data from Prometheus"""
-    end_time = datetime.datetime.now()
-    start_time = end_time - datetime.timedelta(hours=1)  # Get 1 hour of training data
-    metric_data = prom.get_metric_range_data(metric_name, start_time=start_time, end_time=end_time)
+# Load and prepare training data
+def load_training_data():
+    """Load and prepare training data with proper time alignment"""
+    with open("../boutique_training1.json") as f:
+        prom = json.load(f)
     
-    if not metric_data or 'values' not in metric_data[0]:
-        logging.error(f"No training data found for metric {metric_name}")
-        return pd.DataFrame(columns=['ds', 'y'])
+    # Extract values from the training data
+    metric_data = prom['data']['result'][0]['values']
+    df_train = pd.DataFrame(metric_data, columns=['ds', 'y'])
+    df_train['y'] = pd.to_numeric(df_train['y'], errors='coerce')
+    df_train.dropna(subset=['y'], inplace=True)
+    
+    # Reset training data to start from 0 for proper alignment
+    df_train['ds'] = df_train['ds'] - df_train['ds'].iloc[0]
+    df_train['ds'] = df_train['ds'].apply(lambda sec: datetime.fromtimestamp(sec))
+    
+    return df_train
 
-    df = pd.DataFrame(metric_data[0]['values'], columns=['ds', 'y'])
-    df['y'] = pd.to_numeric(df['y'])
-    
-    # Reset training data to 0 origin
-    df['ds'] = pd.to_numeric(df['ds'])
-    df['ds'] = df['ds'] - df['ds'].iloc[0]
-    df['ds'] = df['ds'].apply(lambda sec: datetime.datetime.fromtimestamp(sec))
-    
-    return df
-
-def fetch_current_value(prom, metric_name, test_start_time):
-    """Fetch single current value from Prometheus"""
-    current_time = datetime.datetime.now()
-    metric_data = prom.custom_query(metric_name)
-    
-    if not metric_data:
-        logging.error(f"No current value found for metric {metric_name}")
-        return pd.DataFrame(columns=['ds', 'y'])
-
-    # Create single-row dataframe
-    df = pd.DataFrame([{
-        'ds': float(current_time.timestamp()) - test_start_time,
-        'y': float(metric_data[0]['value'][1])
-    }])
-    
-    # Convert timestamp to datetime
-    df['ds'] = df['ds'].apply(lambda sec: datetime.datetime.fromtimestamp(sec))
-    
-    return df
-
-def train_prophet_model(df_train):
-    """Train the Prophet model with appropriate seasonality settings"""
-    model = Prophet(
-        interval_width=0.99,
-        growth='flat',
-        yearly_seasonality=False,
-        weekly_seasonality=False,
-        daily_seasonality=False
-    )
+# Initialize Prophet model with seasonality settings
+def initialize_model(df_train):
+    """Initialize and train Prophet model with proper seasonality settings"""
+    model = Prophet(interval_width=0.99, 
+                   yearly_seasonality=False, 
+                   weekly_seasonality=False, 
+                   daily_seasonality=False, 
+                   growth='flat')
     model.add_seasonality(name='hourly', period=1/24, fourier_order=5)
     model.fit(df_train)
     return model
 
-def evaluate_datapoint(model, test_data):
-    """Evaluate a single datapoint for anomalies"""
-    forecast = model.predict(test_data)
-    evaluation = pd.merge(
-        test_data.rename(columns={'ds': 'timestamp', 'y': 'value'}),
-        forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']], 
-        left_on='timestamp', 
-        right_on='ds'
-    )
-    evaluation['anomaly'] = evaluation.apply(
-        lambda row: 1 if (float(row.value) < row.yhat_lower or float(row.value) > row.yhat_upper) 
-        else 0, axis=1
-    )
-    return evaluation
+# Define Prometheus metrics
+def setup_prometheus_metrics():
+    """Setup all required Prometheus metrics"""
+    metrics = {
+        'anomaly_count': Gauge('anomaly_count', 'Number of detected anomalies'),
+        'mae_score': Gauge('mae_score', 'Mean Absolute Error (MAE)'),
+        'mape_score': Gauge('mape_score', 'Mean Absolute Percentage Error (MAPE)'),
+        'current_value': Gauge('current_value', 'Current observed value'),
+        'predicted_value': Gauge('predicted_value', 'Predicted value by Prophet'),
+        'yhat_min': Gauge('yhat_min', 'Lower bound of prediction'),
+        'yhat_max': Gauge('yhat_max', 'Upper bound of prediction')
+    }
+    return metrics
 
-def main():
-    url = os.getenv('PROMETHEUS_URL', 'http://localhost:9090')
-    prom = prometheus_connection(url)
+def fetch_current_data():
+    """Fetch single current datapoint from Prometheus"""
+    query = "histogram_quantile(0.5, sum(rate(istio_request_duration_milliseconds_bucket{source_app='frontend', destination_app='shippingservice', reporter='source'}[1m])) by (le))"
+    try:
+        response = requests.get('http://34.168.154.196:9090/api/v1/query', params={'query': query})
+        response.raise_for_status()
+        data = response.json()['data']['result']
+        if not data:
+            print("No data returned from Prometheus.")
+            return None, None
+        timestamp, value = data[0]['value']
+        return float(timestamp), float(value)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data: {e}")
+        return None, None
 
-    # Initialize Prometheus metrics
-    if not any(isinstance(handler, ThreadingWSGIServer) for handler in REGISTRY._collector_to_names.values()):
-        start_http_server(8000)
-
-    anomaly_gauge = Gauge('anomaly_detection', 'Anomaly detection status (0 or 1)')
-    mae_gauge = Gauge('mae_score', 'Mean Absolute Error')
-    mape_gauge = Gauge('mape_score', 'Mean Absolute Percentage Error')
-    ymin_gauge = Gauge('y_min', 'Minimum predicted value')
-    y_gauge = Gauge('y_actual', 'Actual observed value')
-    ymax_gauge = Gauge('y_max', 'Maximum predicted value')
-
-    # Store running metrics
-    anomaly_counts = []
-    test_start_time = datetime.datetime.now().timestamp()
-
+def monitor():
+    """Main monitoring function"""
+    # Load and prepare training data
+    df_train = load_training_data()
+    
+    # Initialize Prophet model
+    model = initialize_model(df_train)
+    
+    # Setup Prometheus metrics
+    metrics = setup_prometheus_metrics()
+    
+    # Start Prometheus server
+    start_http_server(8080)
+    
+    # Store results for analysis
+    results = []
+    
+    # Record start time for test data alignment
+    test_start_time = time.time()
+    
     while True:
-        try:
-            # Get training data and train model
-            train_data = fetch_training_data(prom, 'response_time_seconds')
-            if train_data.empty:
-                logging.error("No training data available")
-                time.sleep(60)
-                continue
-
-            model = train_prophet_model(train_data)
-
-            # Get current value and evaluate
-            current_data = fetch_current_value(prom, 'response_time_seconds', test_start_time)
-            if current_data.empty:
-                logging.error("No current data available")
-                time.sleep(60)
-                continue
-
-            evaluation = evaluate_datapoint(model, current_data)
-
-            # Update metrics
-            anomaly_detected = evaluation['anomaly'].iloc[0]
-            anomaly_counts.append(anomaly_detected)
-            
-            # Set Prometheus gauges
-            anomaly_gauge.set(anomaly_detected)
-            y_gauge.set(float(evaluation['value'].iloc[0]))
-            ymin_gauge.set(float(evaluation['yhat_lower'].iloc[0]))
-            ymax_gauge.set(float(evaluation['yhat_upper'].iloc[0]))
-
-            # Calculate and set error metrics
-            if len(anomaly_counts) > 0:
-                mae = abs(float(evaluation['value'].iloc[0]) - float(evaluation['yhat'].iloc[0]))
-                mape = (mae / float(evaluation['value'].iloc[0])) * 100
-                mae_gauge.set(mae)
-                mape_gauge.set(mape)
-
-                logging.info(f"""
-                Metrics Update:
-                Anomaly: {anomaly_detected}
-                Total Anomalies: {sum(anomaly_counts)}
-                MAE: {mae:.4f}
-                MAPE: {mape:.4f}%
-                Current Value: {float(evaluation['value'].iloc[0]):.4f}
-                Predicted Range: [{float(evaluation['yhat_lower'].iloc[0]):.4f}, {float(evaluation['yhat_upper'].iloc[0]):.4f}]
-                """)
-
-            time.sleep(60)  # Wait for 1 minute before next evaluation
-
-        except Exception as e:
-            logging.error(f"Error in main loop: {e}")
+        # Fetch current data point
+        timestamp, value = fetch_current_data()
+        if value is None:
+            print("Failed to fetch data, retrying in 60 seconds...")
             time.sleep(60)
+            continue
+            
+        # Create aligned test datapoint (starting from 0 like training data)
+        current_time = timestamp - test_start_time
+        df_test = pd.DataFrame({
+            'ds': [datetime.fromtimestamp(current_time)],
+            'y': [value]
+        })
+        
+        # Make prediction
+        forecast = model.predict(df_test)
+        predicted_value = forecast['yhat'].values[0]
+        lower_bound = forecast['yhat_lower'].values[0]
+        upper_bound = forecast['yhat_upper'].values[0]
+        
+        # Detect anomaly
+        is_anomaly = value < lower_bound or value > upper_bound
+        anomaly_count = 1 if is_anomaly else 0
+        
+        # Calculate metrics
+        if not (pd.isna(value) or pd.isna(predicted_value)):
+            mae = mean_absolute_error([value], [predicted_value])
+            mape = mean_absolute_percentage_error([value], [predicted_value])
+        else:
+            mae = mape = None
+            
+        # Update Prometheus metrics
+        metrics['anomaly_count'].set(anomaly_count)
+        metrics['current_value'].set(value)
+        metrics['predicted_value'].set(predicted_value)
+        metrics['yhat_min'].set(lower_bound)
+        metrics['yhat_max'].set(upper_bound)
+        if mae is not None:
+            metrics['mae_score'].set(mae)
+            metrics['mape_score'].set(mape)
+            
+        # Store results
+        results.append({
+            'Timestamp': datetime.now(),
+            'Actual': value,
+            'Predicted': predicted_value,
+            'Lower Bound': lower_bound,
+            'Upper Bound': upper_bound,
+            'Anomaly': anomaly_count,
+            'MAE': mae if mae is not None else 'N/A',
+            'MAPE': mape if mape is not None else 'N/A'
+        })
+        
+        # Print results in tabular format
+        df_results = pd.DataFrame(results)
+        print("\nCurrent Monitoring Results:")
+        print(tabulate(df_results.tail(5), headers='keys', tablefmt='grid', showindex=False))
+        
+        # Wait before next iteration
+        time.sleep(60)
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    monitor()

@@ -52,8 +52,8 @@ def fetch_current_data():
     """Fetch single current datapoint from Prometheus"""
     query = "histogram_quantile(0.5, sum(rate(istio_request_duration_milliseconds_bucket{source_app='frontend', destination_app='shippingservice', reporter='source'}[1m])) by (le))"
     try:
-        response = requests.get('http://34.19.125.8:9090/api/v1/query', params={'query': query})
-        # response = requests.get('http://prometheus.istio-system:9090/api/v1/query', params={'query': query})
+        # response = requests.get('http://34.19.125.8:9090/api/v1/query', params={'query': query})
+        response = requests.get('http://prometheus.istio-system:9090/api/v1/query', params={'query': query})
         response.raise_for_status()
         data = response.json()['data']['result']
         if not data:

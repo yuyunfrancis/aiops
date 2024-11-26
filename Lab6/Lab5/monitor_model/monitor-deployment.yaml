@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boutique-monitor
+  labels:
+    app: boutique-monitor
+spec:
+  replicas: 0 # Start with 0 replicas as requested
+  selector:
+    matchLabels:
+      app: boutique-monitor
+  template:
+    metadata:
+      labels:
+        app: boutique-monitor
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: boutique-monitor
+          image: index.docker.io/francisberi/boutique-monitor:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"

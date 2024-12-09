@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boutique-monitor-frontend-shippingservice
+  labels:
+    app: boutique-monitor
+    source-service: frontend
+    destination-service: shippingservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boutique-monitor
+      source-service: frontend
+      destination-service: shippingservice
+  template:
+    metadata:
+      labels:
+        app: boutique-monitor
+        source-service: frontend
+        destination-service: shippingservice
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: boutique-monitor
+          image: index.docker.io/francisberi/boutique-monitor:latest
+          imagePullPolicy: Always
+          command: ["python", "monitor1.py"]
+          args:
+            - "frontend"
+            - "shippingservice"
+            - "/app/boutique_training.json"
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"

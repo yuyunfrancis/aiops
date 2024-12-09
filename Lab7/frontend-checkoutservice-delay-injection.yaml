@@ -1,0 +1,67 @@
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: frontend-checkoutservice-delay-injection
+#   namespace: default
+# spec:
+#   hosts:
+#     - frontend.default.svc.cluster.local
+#   http:
+#     # Scenario 1: Sev 2 Incident - Single service delay (frontend)
+#     - match:
+#         - sourceLabels:
+#             app: checkoutservice
+#       fault:
+#         delay:
+#           percentage:
+#             value: 100 # 100% of traffic
+#           fixedDelay: 3s # 1-second delay
+#       route:
+#         - destination:
+#             host: frontend.default.svc.cluster.local
+
+#     # Default route
+#     - route:
+#         - destination:
+#             host: frontend.default.svc.cluster.local
+
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: boutique-services-fault-injection
+  namespace: default
+spec:
+  hosts:
+    - frontend.default.svc.cluster.local
+    - checkoutservice.default.svc.cluster.local
+  http:
+    # Scenario 1: Single Service Delay (Sev 2 Incident)
+    - match:
+        - sourceLabels:
+            app: frontend
+      fault:
+        delay:
+          percentage:
+            value: 100.0
+          fixedDelay: 2s
+      route:
+        - destination:
+            host: checkoutservice.default.svc.cluster.local
+
+    # Scenario 2: Dual Service Delays (Sev 1 Incident)
+    # - match:
+    #     - sourceLabels:
+    #         app: checkoutservice
+    #   fault:
+    #     delay:
+    #       percentage:
+    #         value: 100.0
+    #       fixedDelay: 2s
+    #   route:
+    #     - destination:
+    #         host: shippingservice.default.svc.cluster.local
+
+    # Default routing for other traffic
+    - route:
+        - destination:
+            host: frontend.default.svc.cluster.local

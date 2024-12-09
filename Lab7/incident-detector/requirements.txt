@@ -1,0 +1,6 @@
+requests
+pandas
+prophet
+prometheus_client
+scikit-learn
+tabulate

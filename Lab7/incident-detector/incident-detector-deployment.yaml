@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boutique-incident-detector-frontend-checkout-shippingservice
+  labels:
+    app: boutique-incident-detector
+    service1: frontend
+    service2: checkoutservice
+    destination: shippingservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boutique-incident-detector
+      service1: frontend
+      service2: checkoutservice
+      destination: shippingservice
+  template:
+    metadata:
+      labels:
+        app: boutique-incident-detector
+        service1: frontend
+        service2: checkoutservice
+        destination: shippingservice
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: boutique-incident-detector
+          image: index.docker.io/francisberi/detect-incident:latest
+          imagePullPolicy: Always
+          command: ["python3", "incident_detector.py"]
+          args: [
+              "frontend", # service1
+              "checkoutservice", # service2
+              "--port",
+              "8082",
+              "--incident-threshold",
+              "5",
+            ]
+          ports:
+            - containerPort: 8082
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"

@@ -60,6 +60,9 @@ def checkout(l):
         'credit_card_cvv': f"{random.randint(100, 999)}",
     })
     
+    
+    
+    
 def logout(l):
     l.client.get('/logout')  
 
